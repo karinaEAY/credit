@@ -1,158 +1,415 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Інформація про кредити</title>
-    <!-- Підключення Tailwind CSS для стилізації -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Phone Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Підключення шрифту Inter з Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""
+    />
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""
+    ></script>
     <style>
-        /* Встановлюємо основний шрифт для всього документа */
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(-45deg, #f3e8ff, #d8b4fe, #ffffff, #c084fc);
-            background-size: 400% 400%;
-            animation: gradient-animation 15s ease infinite;
         }
 
-        /* Анімація для градієнта фону */
-        @keyframes gradient-animation {
-            0% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-            100% {
-                background-position: 0% 50%;
-            }
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23ffffff%22%20d%3D%22M6.293%208.293a1%201%200%20011.414%200L12%2012.586l4.293-4.293a1%201%200%20011.414%201.414l-5%205a1%201%200%2001-1.414%200l-5-5a1%201%200%20010-1.414z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.25rem;
+            color: white;
         }
 
-        /* Анімація падіння для конфетті */
-        @keyframes fall {
-            0% {
-                transform: translateY(-10vh) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(120vh) rotate(720deg);
-                opacity: 0;
-            }
+        select:invalid {
+            color: #cbd5f5;
         }
 
-        /* Стилі для елементів конфетті */
-        .confetti {
+        option {
+            color: black;
+        }
+
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        .slider-container {
+            position: relative;
+            width: 100%;
+            height: 260px;
+            overflow: hidden;
+            border-radius: 1rem;
+        }
+
+        .slide {
             position: absolute;
-            width: 10px;
-            height: 20px;
-            opacity: 0;
-            animation: fall linear infinite;
-            will-change: transform, opacity;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .slide img {
+            width: auto;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(255, 255, 255, 0.25);
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            width: 40px;
+            height: 40px;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .slider-btn:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .slider-btn:focus-visible {
+            outline: 2px solid rgba(255, 255, 255, 0.7);
+            outline-offset: 2px;
+        }
+
+        .slider-btn.prev {
+            left: 12px;
+        }
+
+        .slider-btn.next {
+            right: 12px;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body class="bg-indigo-950 flex items-center justify-center min-h-screen p-4 text-white">
+    <div class="w-full max-w-sm bg-indigo-800/80 rounded-2xl shadow-2xl p-6 backdrop-blur">
+        <header class="flex justify-between items-center mb-6">
+            <button id="back-btn" class="p-2 rounded-full hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 invisible" aria-label="Go back">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                </svg>
+            </button>
+            <h1 id="header-title" class="text-lg font-semibold">Phone Store</h1>
+            <button id="refresh-btn" class="p-2 rounded-full hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60" aria-label="Restart order">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+            </button>
+        </header>
 
-    <!-- Макет смартфона -->
-    <div class="w-full max-w-sm mx-auto bg-gray-800 rounded-[50px] p-3 shadow-2xl border-4 border-gray-700">
-        <div class="relative w-full h-[750px] bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-[40px] overflow-hidden flex flex-col">
-            <!-- Контейнер для анімації конфетті -->
-            <div id="confetti-container" class="absolute inset-0 z-0"></div>
-
-            <!-- Верхня частина екрана (статус-бар) -->
-            <div class="relative z-10 flex justify-between items-center text-sm font-bold text-white px-6 pt-4">
-                <span>9:41</span>
-                <div class="flex items-center space-x-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.555a5.556 5.556 0 017.778 0M4.444 12.889a10 10 0 0115.112 0M11.778 20.222a1.111 1.111 0 110-2.222 1.111 1.111 0 010 2.222z"/></svg>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.6667 8H20C21.1046 8 22 8.89543 22 10V14C22 15.1046 21.1046 16 20 16H18.6667C18.2985 16 18 15.7015 18 15.3333V8.66667C18 8.29848 18.2985 8 18.6667 8ZM2 10C2 8.89543 2.89543 8 4 8H16V16H4C2.89543 16 2 15.1046 2 14V10Z"/></svg>
-                </div>
-            </div>
-
-            <!-- Основний контент -->
-            <main class="relative z-10 flex-grow flex flex-col items-center justify-center text-center text-white px-6 -mt-8">
-                <!-- Іконка -->
-                <div class="relative mb-6">
-                    <div class="absolute -inset-2 bg-white/20 rounded-full blur-xl"></div>
-                    <div class="relative w-40 h-40">
-                        <!-- Chart Icon -->
-                        <div class="absolute z-10 bottom-0 left-0 bg-slate-100 rounded-2xl p-3 shadow-lg border-2 border-white/50">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"></path>
-                            </svg>
-                        </div>
-                        <!-- Party Popper Icon -->
-                        <img src="https://em-content.zobj.net/source/apple/391/party-popper_1f389.png" alt="Party Popper" class="absolute z-0 -right-10 -top-6 w-36 h-36 drop-shadow-lg" style="transform: rotate(15deg);">
+        <main>
+            <section id="step-1" class="step active" aria-labelledby="step1-title">
+                <h2 id="step1-title" class="text-center font-bold text-xl mb-4">Choose your model</h2>
+                <div class="slider-container mb-6" aria-live="polite">
+                    <div class="slide" data-index="0">
+                        <img src="https://images.contentstack.io/v3/assets/blt8ba403bee4433fd8/blt07f7aa39b985f807/68c145887823e2179637d26e/image-content-iphone-17-pro-max.png" alt="iPhone 17 Pro Max in natural titanium" />
                     </div>
+                    <div class="slide" data-index="1">
+                        <img src="https://my-apple.com.ua/image/catalog/products/iphone/iphone-17-pro-max/iphone-17-pro-max-silver-1.png" alt="iPhone 17 Pro Max in silver" />
+                    </div>
+                    <div class="slide" data-index="2">
+                        <img src="https://my-apple.com.ua/image/catalog/products/iphone/iphone-17-pro-max/iphone-17-pro-max-deep-blue-1.png" alt="iPhone 17 Pro Max in deep blue" />
+                    </div>
+                    <button class="slider-btn prev" id="prev-slide" type="button" aria-label="Previous phone image">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                        </svg>
+                    </button>
+                    <button class="slider-btn next" id="next-slide" type="button" aria-label="Next phone image">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                        </svg>
+                    </button>
                 </div>
 
-                <!-- Текст -->
-                <h2 class="text-3xl font-bold leading-tight drop-shadow-md">
-                    <span class="font-normal text-white/90">Get insights on</span>
-                    <br>
-                    Loans for the unemployed
-                </h2>
+                <form id="configuration-form" novalidate class="space-y-4">
+                    <label class="block">
+                        <span class="sr-only">Phone model</span>
+                        <select id="phone-model" required class="w-full bg-white/20 p-4 rounded-lg border border-white/20 focus:border-white focus:ring-2 focus:ring-white/60 outline-none">
+                            <option value="" disabled selected>Select model</option>
+                            <option value="17 Pro Max">17 Pro Max</option>
+                            <option value="16 Pro Max">16 Pro Max</option>
+                            <option value="16 Pro">16 Pro</option>
+                            <option value="17 Pro">17 Pro</option>
+                        </select>
+                    </label>
+                    <label class="block">
+                        <span class="sr-only">Phone color</span>
+                        <select id="phone-color" required class="w-full bg-white/20 p-4 rounded-lg border border-white/20 focus:border-white focus:ring-2 focus:ring-white/60 outline-none">
+                            <option value="" disabled selected>Select color</option>
+                            <option value="Deep Blue">Deep Blue</option>
+                            <option value="Cosmic Orange">Cosmic Orange</option>
+                            <option value="Silver">Silver</option>
+                        </select>
+                    </label>
+                    <label class="block">
+                        <span class="sr-only">Memory capacity</span>
+                        <select id="phone-memory" required class="w-full bg-white/20 p-4 rounded-lg border border-white/20 focus:border-white focus:ring-2 focus:ring-white/60 outline-none">
+                            <option value="" disabled selected>Select memory</option>
+                            <option value="2TB">2 TB</option>
+                            <option value="1TB">1 TB</option>
+                            <option value="512GB">512 GB</option>
+                            <option value="256GB">256 GB</option>
+                        </select>
+                    </label>
+                    <button id="next-btn" type="button" class="w-full bg-white text-indigo-800 font-bold py-3 px-6 rounded-full mt-6 hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                        Next
+                    </button>
+                </form>
+            </section>
 
-                <!-- Кнопка -->
-                <button type="button" class="mt-8 bg-white/20 hover:bg-white/30 transition-colors duration-300 backdrop-blur-md rounded-2xl p-4 shadow-lg border border-white/30">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
+            <section id="step-2" class="step" aria-labelledby="step2-title">
+                <h2 id="step2-title" class="text-center font-bold text-xl mb-6">Contact information</h2>
+                <form id="details-form" novalidate class="space-y-4">
+                    <label class="block">
+                        <span class="sr-only">Your name</span>
+                        <input type="text" id="user-name" placeholder="Name" required class="w-full bg-white/20 p-4 rounded-lg border border-white/20 placeholder-gray-300 focus:border-white focus:ring-2 focus:ring-white/60 outline-none" />
+                    </label>
+                    <div>
+                        <p class="mb-2 text-sm text-gray-200">Select an address on the map</p>
+                        <div class="h-52 rounded-xl overflow-hidden border border-white/20" id="map" role="application" aria-label="Interactive map for selecting delivery location"></div>
+                        <p id="address-output" class="mt-2 text-sm text-gray-200 min-h-[1.5rem]">Tap on the map to choose a delivery point.</p>
+                        <input type="hidden" id="address-selected" />
+                    </div>
+                    <button id="submit-btn" type="button" class="w-full bg-white text-indigo-800 font-bold py-3 px-6 rounded-full mt-6 hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                        Submit order
+                    </button>
+                </form>
+            </section>
+
+            <section id="step-3" class="step text-center" aria-labelledby="step3-title">
+                <div class="flex justify-center mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-32 h-32 text-rose-400">
+                        <path d="M3.375 4.5C2.339 4.5 1.5 5.34 1.5 6.375V13.5h1.063c.24 1.657 1.683 3 3.437 3s3.197-1.343 3.437-3H14.5c.24 1.657 1.683 3 3.437 3s3.197-1.343 3.437-3H22.5V6.375c0-1.036-.84-1.875-1.875-1.875H3.375zM19.063 15c-.828 0-1.5-.672-1.5-1.5s.672-1.5 1.5-1.5 1.5.672 1.5 1.5-.672 1.5-1.5 1.5zM5.938 15c-.828 0-1.5-.672-1.5-1.5s.672-1.5 1.5-1.5 1.5.672 1.5 1.5-.672 1.5-1.5 1.5zM21 9.75H3V6.375C3 6.168 3.168 6 3.375 6H20.625c.207 0 .375.168.375.375V9.75z" />
+                        <path fill-rule="evenodd" d="M11.69 19.14a.75.75 0 01-1.38 0 2.252 2.252 0 01.19-2.06.75.75 0 10-1.32-.72 3.752 3.752 0 00-.32 3.44 2.25 2.25 0 104.06 0 3.752 3.752 0 00-.32-3.44.75.75 0 10-1.32.72 2.252 2.252 0 01.19 2.06z" clip-rule="evenodd" />
                     </svg>
-                </button>
-            </main>
-
-            <!-- Нижній текст -->
-            
-        </div>
+                </div>
+                <h2 id="step3-title" class="font-bold text-2xl mb-4">Your iPhone is on the way!</h2>
+                <p class="text-lg">Arrives in: <span id="countdown">02:00:00</span></p>
+                <button id="new-order-btn" type="button" class="mt-6 bg-white text-indigo-800 font-semibold px-5 py-2 rounded-full hover:bg-gray-200 transition-colors">Place another order</button>
+            </section>
+        </main>
     </div>
 
     <script>
-        // Скрипт для створення анімації конфетті
-        document.addEventListener('DOMContentLoaded', () => {
-            const confettiContainer = document.getElementById('confetti-container');
-            if (!confettiContainer) return;
+        const steps = Array.from(document.querySelectorAll('.step'));
+        const headerTitle = document.getElementById('header-title');
+        const backBtn = document.getElementById('back-btn');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const newOrderBtn = document.getElementById('new-order-btn');
 
-            const colors = ['#fde047', '#f97316', '#ec4899', '#8b5cf6', '#3b82f6', '#10b981'];
-            const confettiCount = 60;
+        const modelSelect = document.getElementById('phone-model');
+        const colorSelect = document.getElementById('phone-color');
+        const memorySelect = document.getElementById('phone-memory');
+        const nameInput = document.getElementById('user-name');
+        const addressSelectedInput = document.getElementById('address-selected');
+        const addressOutput = document.getElementById('address-output');
 
-            for (let i = 0; i < confettiCount; i++) {
-                const confetti = document.createElement('div');
-                confetti.classList.add('confetti');
-                
-                // Випадкове розташування, колір та форма
-                confetti.style.left = `${Math.random() * 100}%`;
-                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                
-                const isRect = Math.random() > 0.5;
-                if (isRect) {
-                    confetti.style.width = `${Math.random() * 6 + 6}px`; // від 6px до 12px
-                    confetti.style.height = `${Math.random() * 10 + 10}px`; // від 10px до 20px
-                } else {
-                    confetti.style.width = '12px';
-                    confetti.style.height = '12px';
-                    confetti.style.borderRadius = '50%';
+        const slides = Array.from(document.querySelectorAll('.slide'));
+        const prevSlideBtn = document.getElementById('prev-slide');
+        const nextSlideBtn = document.getElementById('next-slide');
+        const countdownEl = document.getElementById('countdown');
+
+        let currentStep = 0;
+        let currentSlide = 0;
+        let countdownInterval;
+
+        function setStep(stepIndex) {
+            steps.forEach((step, index) => {
+                step.classList.toggle('active', index === stepIndex);
+            });
+            currentStep = stepIndex;
+
+            if (stepIndex === 0) {
+                headerTitle.textContent = 'Phone Store';
+                backBtn.classList.add('invisible');
+            } else if (stepIndex === 1) {
+                headerTitle.textContent = 'Contact Info';
+                backBtn.classList.remove('invisible');
+            } else {
+                headerTitle.textContent = 'Order Status';
+                backBtn.classList.add('invisible');
+            }
+
+            updateButtonsState();
+        }
+
+        function updateButtonsState() {
+            const isConfigurationValid = modelSelect.value && colorSelect.value && memorySelect.value;
+            nextBtn.disabled = !isConfigurationValid;
+
+            const isDetailsValid = Boolean(nameInput.value.trim()) && Boolean(addressSelectedInput.value);
+            submitBtn.disabled = !isDetailsValid;
+        }
+
+        function showSlide(slideIndex) {
+            currentSlide = (slideIndex + slides.length) % slides.length;
+            slides.forEach((slide, index) => {
+                slide.style.transform = `translateX(${(index - currentSlide) * 100}%)`;
+            });
+        }
+
+        function startCountdown() {
+            clearInterval(countdownInterval);
+            let remainingSeconds = 2 * 60 * 60;
+
+            const formatTime = (value) => String(value).padStart(2, '0');
+
+            countdownInterval = setInterval(() => {
+                if (remainingSeconds < 0) {
+                    clearInterval(countdownInterval);
+                    countdownEl.textContent = 'Arrived!';
+                    return;
                 }
 
-                // Випадкова тривалість та затримка анімації
-                confetti.style.animationDuration = `${Math.random() * 4 + 5}s`; // від 5 до 9 секунд
-                confetti.style.animationDelay = `${Math.random() * 6}s`;
-                
-                confettiContainer.appendChild(confetti);
+                const hours = Math.floor(remainingSeconds / 3600);
+                const minutes = Math.floor((remainingSeconds % 3600) / 60);
+                const seconds = remainingSeconds % 60;
+                countdownEl.textContent = `${formatTime(hours)}:${formatTime(minutes)}:${formatTime(seconds)}`;
+                remainingSeconds -= 1;
+            }, 1000);
+        }
+
+        function resetForms() {
+            document.getElementById('configuration-form').reset();
+            document.getElementById('details-form').reset();
+            addressSelectedInput.value = '';
+            addressOutput.textContent = 'Tap on the map to choose a delivery point.';
+            map.eachLayer((layer) => {
+                if (layer instanceof L.Marker) {
+                    map.removeLayer(layer);
+                }
+            });
+            updateButtonsState();
+        }
+
+        nextBtn.addEventListener('click', () => {
+            if (!nextBtn.disabled) {
+                setStep(1);
             }
         });
-    </script>
 
+        submitBtn.addEventListener('click', () => {
+            if (!submitBtn.disabled) {
+                setStep(2);
+                startCountdown();
+            }
+        });
+
+        backBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                setStep(currentStep - 1);
+            }
+        });
+
+        refreshBtn.addEventListener('click', () => {
+            resetForms();
+            setStep(0);
+            showSlide(0);
+        });
+
+        newOrderBtn.addEventListener('click', () => {
+            resetForms();
+            setStep(0);
+            showSlide(0);
+        });
+
+        [modelSelect, colorSelect, memorySelect].forEach((select) => {
+            select.addEventListener('change', updateButtonsState);
+        });
+
+        nameInput.addEventListener('input', updateButtonsState);
+
+        prevSlideBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+        nextSlideBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+
+        // Initialize slider positions
+        showSlide(0);
+
+        // Map initialisation with Leaflet
+        const map = L.map('map', {
+            zoomControl: false
+        }).setView([50.4501, 30.5234], 11);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        let activeMarker = null;
+
+        map.on('click', async (event) => {
+            const { lat, lng } = event.latlng;
+
+            if (activeMarker) {
+                activeMarker.setLatLng([lat, lng]);
+            } else {
+                activeMarker = L.marker([lat, lng], {
+                    keyboard: true
+                }).addTo(map);
+            }
+
+            addressSelectedInput.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            addressOutput.textContent = `Selected location: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            updateButtonsState();
+
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+                if (!response.ok) {
+                    throw new Error('Reverse geocoding failed');
+                }
+                const data = await response.json();
+                if (data && data.display_name) {
+                    addressOutput.textContent = data.display_name;
+                    addressSelectedInput.value = data.display_name;
+                    updateButtonsState();
+                }
+            } catch (error) {
+                console.warn(error);
+            }
+        });
+
+        map.on('keydown', (event) => {
+            if (event.originalEvent.key === 'Enter' && map.getCenter()) {
+                const center = map.getCenter();
+                map.fire('click', { latlng: center });
+            }
+        });
+
+        setStep(0);
+    </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
